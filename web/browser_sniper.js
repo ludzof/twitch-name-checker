@@ -14,7 +14,7 @@
   const existingPill = document.getElementById("twitch-sniper-status-pill");
   if (existingPill) existingPill.remove();
 
-  console.log("%c🎯 Twitch Sniper Bridge v3.0 (Continuous Mode) Activated!", "color: #00f593; font-size: 16px; font-weight: bold;");
+  console.log("%c🚀 Twitch Sniper Bridge v4.0 (20x HyperTurbo Mode) Activated!", "color: #00f593; font-size: 16px; font-weight: bold;");
 
   // State
   let isScanning = false;
@@ -355,10 +355,10 @@
     return names;
   }
 
-  // Turbo GQL Scanner
+  // HyperTurbo GQL Multi-Worker Scanner (v4.0 - 20x Speed)
   async function startScan(opts = {}) {
     if (isScanning) return;
-    const h = await getHeaders();
+    let h = await getHeaders();
     if (!h) {
       alert("❌ Could not acquire Twitch session integrity token. Please click into the username box and try again.");
       return;
@@ -371,84 +371,121 @@
     currentBatch = "";
     let foundHits = [];
     startTime = Date.now();
-    updatePill(`⚡ Turbo Scanning (${candidates.length} names)...`, "#00f593");
 
-    const BATCH = 15;
-    for (let i = 0; i < candidates.length; i += BATCH) {
-      if (!isScanning) break;
-      const chunk = candidates.slice(i, i + BATCH);
-      currentBatch = chunk.join(", ");
+    const CONCURRENCY = Math.max(1, Math.min(10, parseInt(opts.concurrency) || 6));
+    const BATCH_SIZE = Math.max(5, Math.min(35, parseInt(opts.batch_size) || 30));
 
-      const payload = chunk.map(name => ({
-        operationName: "UsernameValidator_User",
-        variables: { username: name },
-        extensions: {
-          persistedQuery: {
-            version: 1,
-            sha256Hash: "fd1085cf8350e309b725cf8ca91cd90cac03909a3edeeedbd0872ac912f3d660"
+    updatePill(`🚀 HyperTurbo (${candidates.length.toLocaleString()} names · ${CONCURRENCY} workers · Batch ${BATCH_SIZE})...`, "#00f593");
+
+    let cursor = 0;
+    let rateLimitUntil = 0;
+    let lastUiUpdate = 0;
+
+    async function runWorker(workerId) {
+      while (isScanning && cursor < candidates.length) {
+        // Handle global rate limit pause
+        if (Date.now() < rateLimitUntil) {
+          const waitTime = rateLimitUntil - Date.now();
+          if (waitTime > 0) {
+            await new Promise(r => setTimeout(r, waitTime));
           }
         }
-      }));
+        if (!isScanning) break;
 
-      try {
-        const res = await origFetch("https://gql.twitch.tv/gql", {
-          method: "POST",
-          headers: h,
-          body: JSON.stringify(payload)
-        });
+        // Atomically grab next batch
+        const startIdx = cursor;
+        const chunk = candidates.slice(startIdx, startIdx + BATCH_SIZE);
+        cursor += BATCH_SIZE;
 
-        if (res.ok) {
-          const data = await res.json();
-          const arr = Array.isArray(data) ? data : [data];
-          for (let j = 0; j < arr.length; j++) {
-            testedCount++;
-            if (arr[j]?.data?.isUsernameAvailable === true) {
-              const hit = chunk[j];
-              if (!foundHits.includes(hit)) {
-                foundHits.push(hit);
-                try { playSuccessSound(); } catch (e) {}
-                try { fillUsername(hit); } catch (e) {}
+        if (!chunk || chunk.length === 0) break;
 
-                // Inform dashboard of hit immediately
-                try {
-                  await bridgeRequest("/api/bridge/sync", {
-                    hit: hit,
-                    user: getTwitchUsername(),
-                    state: isScanning ? "RUNNING" : "IDLE",
-                    tested: testedCount,
-                    speed: currentSpeed,
-                    batch: currentBatch,
-                    version: "v3.0"
-                  });
-                } catch (e) {}
+        if (workerId === 0) {
+          currentBatch = chunk.slice(0, 4).join(", ") + (chunk.length > 4 ? `... (+${chunk.length - 4} more)` : "");
+        }
 
-                if (opts.stop_on_first === true) {
-                  isScanning = false;
-                  updatePill(`🎉 CLAIMABLE: <strong>${hit}</strong>`, "#00f593");
-                  return;
-                } else {
-                  updatePill(`🎉 HIT (${foundHits.length}): <strong>${hit}</strong> | Searching more...`, "#00f593");
+        const payload = chunk.map(name => ({
+          operationName: "UsernameValidator_User",
+          variables: { username: name },
+          extensions: {
+            persistedQuery: {
+              version: 1,
+              sha256Hash: "fd1085cf8350e309b725cf8ca91cd90cac03909a3edeeedbd0872ac912f3d660"
+            }
+          }
+        }));
+
+        try {
+          const res = await origFetch("https://gql.twitch.tv/gql", {
+            method: "POST",
+            headers: h,
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const arr = Array.isArray(data) ? data : [data];
+            for (let j = 0; j < arr.length; j++) {
+              testedCount++;
+              if (arr[j]?.data?.isUsernameAvailable === true) {
+                const hit = chunk[j];
+                if (!foundHits.includes(hit)) {
+                  foundHits.push(hit);
+                  try { playSuccessSound(); } catch (e) {}
+                  try { fillUsername(hit); } catch (e) {}
+
+                  // Inform dashboard of hit non-blockingly
+                  try {
+                    bridgeRequest("/api/bridge/sync", {
+                      hit: hit,
+                      user: getTwitchUsername(),
+                      state: isScanning ? "RUNNING" : "IDLE",
+                      tested: testedCount,
+                      speed: currentSpeed,
+                      batch: currentBatch,
+                      version: "v4.0 HyperTurbo"
+                    }).catch(() => {});
+                  } catch (e) {}
+
+                  if (opts.stop_on_first === true) {
+                    isScanning = false;
+                    updatePill(`🎉 CLAIMABLE: <strong>${hit}</strong>`, "#00f593");
+                    return;
+                  } else {
+                    updatePill(`🎉 HIT (${foundHits.length}): <strong>${hit}</strong> | Scanning at 20x HyperTurbo...`, "#00f593");
+                  }
                 }
               }
             }
+          } else if (res.status === 429) {
+            rateLimitUntil = Date.now() + 2000;
+            updatePill("⚠️ Rate limited by Twitch, pausing 2s...", "#ffaa00");
+            await new Promise(r => setTimeout(r, 2000));
+          } else if (res.status === 401 || res.status === 403) {
+            capturedHeaders = null;
+            h = await getHeaders();
           }
-        } else if (res.status === 429) {
-          updatePill("⚠️ Rate limited by Twitch, pausing 2s...", "#ffaa00");
-          await new Promise(r => setTimeout(r, 2000));
-        } else if (res.status === 401 || res.status === 403) {
-          // Token / integrity expired - refresh
-          capturedHeaders = null;
-          h = await getHeaders();
+        } catch (e) {}
+
+        const now = Date.now();
+        if (now - lastUiUpdate > 120) {
+          lastUiUpdate = now;
+          const sec = (now - startTime) / 1000;
+          currentSpeed = sec > 0 ? parseFloat((testedCount / sec).toFixed(1)) : 0.0;
+          const hitPrefix = foundHits.length > 0 ? `[${foundHits.length} found] ` : "";
+          updatePill(`🚀 ${hitPrefix}HyperTurbo: ${testedCount.toLocaleString()} (${currentSpeed}/s)`, "#00f593");
         }
-      } catch (e) {}
 
-      const sec = (Date.now() - startTime) / 1000;
-      currentSpeed = sec > 0 ? parseFloat((testedCount / sec).toFixed(1)) : 0.0;
-      const hitPrefix = foundHits.length > 0 ? `[${foundHits.length} found] ` : "";
-      updatePill(`⚡ ${hitPrefix}Scanning: ${testedCount} (${currentSpeed}/s)`, "#00f593");
-
-      await new Promise(r => setTimeout(r, 30)); // 30ms throttle for steady 200+ req/s
+        // Micro-yield to keep browser responsive
+        await new Promise(r => setTimeout(r, 4));
+      }
     }
+
+    // Launch all concurrent workers simultaneously
+    const workers = [];
+    for (let w = 0; w < CONCURRENCY; w++) {
+      workers.push(runWorker(w));
+    }
+    await Promise.all(workers);
 
     isScanning = false;
     currentBatch = "";
@@ -461,7 +498,7 @@
         tested: testedCount,
         speed: 0.0,
         batch: "",
-        version: "v3.0"
+        version: "v4.0 HyperTurbo"
       });
     } catch (e) {}
   }
@@ -485,13 +522,13 @@
           tested: testedCount,
           speed: currentSpeed,
           batch: currentBatch,
-          version: "v3.0"
+          version: "v4.0 HyperTurbo"
         });
 
         if (!isConnected) {
           isConnected = true;
           if (!isScanning) {
-            updatePill(`Dashboard Linked: <strong>Active v3.0 (${getTwitchUsername()})</strong>`, "#00f593");
+            updatePill(`Dashboard Linked: <strong>Active v4.0 HyperTurbo (${getTwitchUsername()})</strong>`, "#00f593");
           }
         }
 

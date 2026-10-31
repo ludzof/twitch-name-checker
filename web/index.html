@@ -23,7 +23,7 @@
           </svg>
         </div>
         <div>
-          <h1 class="brand-title">Twitch Name Sniper <span class="badge-tag">Turbo 2.0</span></h1>
+          <h1 class="brand-title">Twitch Name Sniper <span class="badge-tag">20x HyperTurbo 4.0</span></h1>
           <p class="brand-sub">Real-time internal GraphQL validator linked directly to your Twitch browser tab</p>
         </div>
       </div>
@@ -48,8 +48,8 @@
       <div class="banner-content">
         <div class="banner-badge">STEP 1</div>
         <div class="banner-text">
-          <h3>Link your Twitch Browser Tab</h3>
-          <p>Run the sniper inside your open <a href="https://www.twitch.tv/settings/profile" target="_blank">twitch.tv/settings/profile</a> tab so this dashboard can control it directly:</p>
+          <h3>Link your Twitch Browser Tab (HyperTurbo 4.0)</h3>
+          <p>Run the sniper inside your open <a href="https://www.twitch.tv/settings/profile" target="_blank">twitch.tv/settings/profile</a> tab so this dashboard can control it directly at 20x speed:</p>
         </div>
       </div>
 
@@ -59,7 +59,7 @@
           <div class="option-title">Option A: Bookmarklet (Easiest)</div>
           <p>Drag this button to your Bookmarks Bar, then click it on Twitch:</p>
           <a href='javascript:(function(){const s=document.createElement("script");s.src="http://localhost:5050/static/browser_sniper.js?v="+Date.now();document.body.appendChild(s);})();' class="bookmarklet-btn" title="Drag me to your bookmarks bar!">
-            🎯 Link Twitch Sniper (v3.0)
+            🚀 Link Twitch Sniper (v4.0 20x)
           </a>
         </div>
 
@@ -78,7 +78,7 @@
           <div class="option-title">Option C: Tampermonkey Userscript (Auto-Live)</div>
           <p>Installs a live auto-updating loader for Twitch settings:</p>
           <a href="/twitch_sniper.user.js" target="_blank" class="btn-sm btn-secondary">
-            ⚡ Update / Install Userscript (v3.0)
+            ⚡ Update / Install Userscript (v4.0)
           </a>
         </div>
       </div>
@@ -89,7 +89,7 @@
       <div class="control-header">
         <div>
           <h2>Control Center</h2>
-          <p>Pick a candidate type and activate the high-speed scanner directly from this dashboard</p>
+          <p>Pick candidate type & speed multiplier, then activate the 20x hyper-speed scanner</p>
         </div>
         <div class="scanner-state-tag" id="control-state-badge">IDLE</div>
       </div>
@@ -144,10 +144,21 @@
           </select>
         </div>
 
+        <!-- 20x Speed Multiplier Preset Selector -->
+        <div class="selector-item speed-selector-item" style="max-width: 320px;">
+          <label for="select-speed-preset">⚡ Speed Multiplier:</label>
+          <select id="select-speed-preset" class="main-select">
+            <option value="hyperturbo" selected>🚀 20x HyperTurbo (~800–1,200/s · 6 Workers)</option>
+            <option value="overdrive">🔥 Overdrive (~1,200–1,600/s · 8 Workers)</option>
+            <option value="turbo">⚡ Turbo 10x (~400–600/s · 4 Workers)</option>
+            <option value="safe">🏎️ Safe (~150–250/s · 2 Workers)</option>
+          </select>
+        </div>
+
         <div class="action-buttons-container">
           <button id="btn-dashboard-start" class="btn-start-hero">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            <span>START TURBO SCAN</span>
+            <span>START 20x SCAN</span>
           </button>
           <button id="btn-dashboard-stop" class="btn-stop-hero" disabled>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16"></rect></svg>

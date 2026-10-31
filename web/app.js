@@ -77,9 +77,12 @@ function updateBridgeUI(bridge) {
   if (bridge.connected) {
     bridgePill.className = "status-pill online";
     const ver = bridge.bridge_version || "v2.0";
-    if (ver === "v3.0") {
-      bridgeText.innerHTML = `Twitch Tab: <strong>Linked (${bridge.twitch_user || "Active"} · v3.0 Continuous)</strong>`;
+    if (ver.includes("v4") || ver.includes("HyperTurbo")) {
+      bridgeText.innerHTML = `Twitch Tab: <strong>Linked (${bridge.twitch_user || "Active"} · 🚀 20x HyperTurbo)</strong>`;
       document.getElementById("bridge-connect-banner").style.borderColor = "rgba(0, 245, 147, 0.4)";
+    } else if (ver === "v3.0") {
+      bridgeText.innerHTML = `Twitch Tab: <strong>Linked (${bridge.twitch_user || "Active"} · v3.0)</strong> · <span style="color:#ffaa00;font-weight:700;">Update to 20x recommended</span>`;
+      document.getElementById("bridge-connect-banner").style.borderColor = "rgba(255, 170, 0, 0.6)";
     } else {
       bridgeText.innerHTML = `Twitch Tab: <strong>Linked (${bridge.twitch_user || "Active"})</strong> · <span style="color:#ffaa00;font-weight:700;">Old Script (Please refresh Twitch tab)</span>`;
       document.getElementById("bridge-connect-banner").style.borderColor = "rgba(255, 170, 0, 0.6)";
@@ -255,11 +258,27 @@ btnDashboardStart.addEventListener("click", async () => {
   const chkContinuous = document.getElementById("chk-continuous-scan");
   const isContinuous = chkContinuous ? chkContinuous.checked : true;
 
+  const speedPreset = document.getElementById("select-speed-preset")?.value || "hyperturbo";
+  let concurrency = 6;
+  let batchSize = 30;
+  if (speedPreset === "overdrive") {
+    concurrency = 8;
+    batchSize = 35;
+  } else if (speedPreset === "turbo") {
+    concurrency = 4;
+    batchSize = 25;
+  } else if (speedPreset === "safe") {
+    concurrency = 2;
+    batchSize = 15;
+  }
+
   await sendBridgeCommand("start", {
     source: selectedSource,
     pattern: customPattern,
     custom_list: customList,
-    stop_on_first: !isContinuous
+    stop_on_first: !isContinuous,
+    concurrency: concurrency,
+    batch_size: batchSize
   });
   fetchBridgeStatus();
 });

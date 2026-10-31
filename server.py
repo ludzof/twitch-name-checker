@@ -531,8 +531,8 @@ async def handle_userscript(request: web.Request) -> web.Response:
     userscript_content = """// ==UserScript==
 // @name         Twitch Short Username Sniper Bridge
 // @namespace    http://localhost:5050/
-// @version      3.0
-// @description  Connects Twitch settings directly to your local Name Sniper Dashboard
+// @version      4.0
+// @description  Connects Twitch settings directly to your local Name Sniper Dashboard (20x HyperTurbo)
 // @match        https://www.twitch.tv/settings/profile*
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
@@ -541,7 +541,7 @@ async def handle_userscript(request: web.Request) -> web.Response:
 // ==/UserScript==
 
 (function () {
-  console.log("🎯 Twitch Sniper Bridge v3.0 Loader initializing...");
+  console.log("🚀 Twitch Sniper Bridge v4.0 HyperTurbo Loader initializing...");
   function loadSniper() {
     if (typeof GM_xmlhttpRequest !== "undefined") {
       GM_xmlhttpRequest({
