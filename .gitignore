@@ -1,0 +1,24 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Database & logs
+results.db
+server_start.log
+*.log
+available_usernames.txt
+
+# Virtual Environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

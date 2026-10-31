@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twitch Name Sniper Dashboard</title>
+  <link rel="icon" href="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142675f72.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="twitch-glitch-icon">
+          <svg viewBox="0 0 24 28" height="26" width="22" fill="currentColor">
+            <path d="M2.149 0L.537 4.119v19.6h6.431V28l4.298-4.281h3.761L23.463 15.35V0H2.149zm19.179 14.281l-3.761 3.752H13.82l-3.761 3.753v-3.753H4.836V2.142h16.492v12.139z"/>
+            <path d="M19.179 5.357h-2.149v6.429h2.149V5.357zm-6.433 0h-2.149v6.429h2.149V5.357z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Twitch Name Sniper <span class="badge-tag">Turbo 2.0</span></h1>
+          <p class="brand-sub">Real-time internal GraphQL validator linked directly to your Twitch browser tab</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Live Bridge Status Pill -->
+        <div id="bridge-pill" class="status-pill offline">
+          <span class="dot"></span> 
+          <span id="bridge-text">Twitch Tab: Disconnected</span>
+        </div>
+        <a href="https://www.twitch.tv/settings/profile" target="_blank" rel="noopener" class="btn-twitch-settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+          </svg>
+          Open Twitch Tab
+        </a>
+      </div>
+    </header>
+
+    <!-- Quick Tab Connection Guide (Collapsible/Dismissible) -->
+    <section id="bridge-connect-banner" class="card connect-banner">
+      <div class="banner-content">
+        <div class="banner-badge">STEP 1</div>
+        <div class="banner-text">
+          <h3>Link your Twitch Browser Tab</h3>
+          <p>Run the sniper inside your open <a href="https://www.twitch.tv/settings/profile" target="_blank">twitch.tv/settings/profile</a> tab so this dashboard can control it directly:</p>
+        </div>
+      </div>
+
+      <div class="connect-options-row">
+        <!-- Option A: Bookmarklet -->
+        <div class="connect-option">
+          <div class="option-title">Option A: Bookmarklet (Easiest)</div>
+          <p>Drag this button to your Bookmarks Bar, then click it on Twitch:</p>
+          <a href='javascript:(function(){const s=document.createElement("script");s.src="http://localhost:5050/static/browser_sniper.js?v="+Date.now();document.body.appendChild(s);})();' class="bookmarklet-btn" title="Drag me to your bookmarks bar!">
+            🎯 Link Twitch Sniper (v3.0)
+          </a>
+        </div>
+
+        <!-- Option B: 1-Line Console Snippet -->
+        <div class="connect-option">
+          <div class="option-title">Option B: 1-Line Console Command</div>
+          <p>Press <kbd>F12</kbd> on Twitch $\rightarrow$ Console $\rightarrow$ Paste this line:</p>
+          <div class="copy-line-box">
+            <code>fetch("http://localhost:5050/static/browser_sniper.js?v=" + Date.now()).then(r=>r.text()).then(eval);</code>
+            <button id="btn-copy-oneliner" class="btn-sm btn-primary">Copy</button>
+          </div>
+        </div>
+
+        <!-- Option C: Tampermonkey Userscript -->
+        <div class="connect-option">
+          <div class="option-title">Option C: Tampermonkey Userscript (Auto-Live)</div>
+          <p>Installs a live auto-updating loader for Twitch settings:</p>
+          <a href="/twitch_sniper.user.js" target="_blank" class="btn-sm btn-secondary">
+            ⚡ Update / Install Userscript (v3.0)
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Simple Control Panel -->
+    <section class="card main-control-card">
+      <div class="control-header">
+        <div>
+          <h2>Control Center</h2>
+          <p>Pick a candidate type and activate the high-speed scanner directly from this dashboard</p>
+        </div>
+        <div class="scanner-state-tag" id="control-state-badge">IDLE</div>
+      </div>
+
+      <!-- Simple Candidate Selector -->
+      <div class="simple-selector-row">
+        <div class="selector-item">
+          <label for="select-candidate-source">Candidate Names / Category:</label>
+          <select id="select-candidate-source" class="main-select">
+            <optgroup label="🌐 All 4-Character Exhaustive (Every Character)">
+              <option value="all_4char_alphanumeric">🌐 All 4 Characters (Every character: a-z, 0-9 · 1,679,616 combinations)</option>
+              <option value="letters_4">🔡 All 4 Letters (Every letter: aaaa → zzzz · 456,976 combinations)</option>
+              <option value="letters_4_a_e">🔤 4 Letters: A → E (~87,800 combinations)</option>
+              <option value="letters_4_f_j">🔤 4 Letters: F → J (~87,800 combinations)</option>
+              <option value="letters_4_k_o">🔤 4 Letters: K → O (~87,800 combinations)</option>
+              <option value="letters_4_p_t">🔤 4 Letters: P → T (~87,800 combinations)</option>
+              <option value="letters_4_u_z">🔤 4 Letters: U → Z (~105,400 combinations)</option>
+              <option value="alphanumeric_digits_first">🔢 4 Characters starting with Number (0-9*** · 466,560 combinations)</option>
+            </optgroup>
+
+            <optgroup label="✨ 4-Letter Clean & Aesthetic">
+              <option value="pronounceable_4" selected>✨ 4-Letter Pronounceable (CVCV, e.g. kuro, vibe, zemo, lavi)</option>
+              <option value="aesthetic_4">💎 4-Letter Aesthetic Patterns (AABB, ABAB, ABBA, AAAA)</option>
+              <option value="dictionary_4">📖 4-Letter English Dictionary Words (4,030 words)</option>
+            </optgroup>
+
+            <optgroup label="🎯 Popular Short Wildcards & Prefixes">
+              <option value="wildcard_z">🎯 Wildcard 'z***' (4 chars starting with z)</option>
+              <option value="wildcard_x">🎯 Wildcard 'x***' (4 chars starting with x)</option>
+              <option value="wildcard_q">🎯 Wildcard 'q***' (4 chars starting with q)</option>
+              <option value="wildcard_v">🎯 Wildcard 'v***' (4 chars starting with v)</option>
+              <option value="wildcard_k">🎯 Wildcard 'k***' (4 chars starting with k)</option>
+              <option value="wildcard_vk">🎯 Wildcard 'vk**' (4 chars starting with vk)</option>
+              <option value="wildcard_svk_4">🇸🇰 Slovak / Regional '*svk' (4 chars, e.g. asvk, xsvk)</option>
+              <option value="wildcard_svk_5">🇸🇰 Slovak / Regional '**svk' (5 chars, e.g. easvk, yosvk)</option>
+              <option value="wildcard_cz_4">🇨🇿 Czech '*cz' (4 chars, e.g. tucz, alcz)</option>
+              <option value="wildcard_og">👑 Gamertag Suffixes '**og', '**gg', '**tv'</option>
+              <option value="wildcard_numbers">⚡ Lucky Double Digits '**77', '**99', '**00'</option>
+            </optgroup>
+
+            <optgroup label="🌟 5-Letter Clean / OG Handles">
+              <option value="dictionary_5">📖 5-Letter English Dictionary Words (8,938 clean words)</option>
+              <option value="pronounceable_5">✨ 5-Letter Pronounceable (CVCVC, e.g. kurox, valek, zenon)</option>
+              <option value="aesthetic_5">💎 5-Letter Aesthetic & Palindromes (AAAAA, AAABB, ABABA, ABCBA)</option>
+            </optgroup>
+
+            <optgroup label="✏️ Custom / User Defined">
+              <option value="custom_pattern">✏️ Custom Wildcard Pattern (Type your own pattern: *god, ??99, etc.)</option>
+              <option value="custom_paste">📝 Paste Custom Name List (Paste any list of handles)</option>
+              <option value="local_scanner">📋 Local Pre-filtered Candidates (from SQLite database)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="action-buttons-container">
+          <button id="btn-dashboard-start" class="btn-start-hero">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>START TURBO SCAN</span>
+          </button>
+          <button id="btn-dashboard-stop" class="btn-stop-hero" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16"></rect></svg>
+            <span>STOP</span>
+          </button>
+          <label class="continuous-toggle" title="Continuous scan: Keep searching through all candidate names and do not stop when a claimable handle is found.">
+            <input type="checkbox" id="chk-continuous-scan" checked>
+            <span class="continuous-toggle-box"></span>
+            <span class="continuous-toggle-text">Continuous Scan (Find all)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Collapsible Custom Pattern Box -->
+      <div id="custom-pattern-box" class="custom-input-box hidden">
+        <div class="custom-input-header">
+          <label for="input-custom-pattern">Enter Wildcard Pattern:</label>
+          <span class="custom-hint">Legend: <code>*</code> or <code>?</code> = letter/digit, <code>@</code> = letter, <code>#</code> = digit</span>
+        </div>
+        <div class="custom-input-row">
+          <input type="text" id="input-custom-pattern" class="input-pattern" placeholder="e.g. *god, z***, ??99, x#@#" value="*god" maxlength="15">
+          <span id="pattern-count-badge" class="badge-count">36 combinations</span>
+        </div>
+      </div>
+
+      <!-- Collapsible Custom Paste Box -->
+      <div id="custom-paste-box" class="custom-input-box hidden">
+        <div class="custom-input-header">
+          <label for="textarea-custom-names">Paste Usernames to Test:</label>
+          <span class="custom-hint">One per line or separated by commas (min 4 characters)</span>
+        </div>
+        <textarea id="textarea-custom-names" class="textarea-custom" rows="3" placeholder="Enter usernames here:&#10;kuro&#10;vibe&#10;zeno&#10;..."></textarea>
+        <div class="custom-paste-footer">
+          <span id="paste-count-badge" class="badge-count">0 handles loaded</span>
+        </div>
+      </div>
+
+      <!-- Live Speedometer & Metrics Row -->
+      <div class="live-stats-bar">
+        <div class="stat-box">
+          <span class="stat-label">Scan Speed</span>
+          <div class="stat-val speed-val"><span id="live-speed">0.0</span> <small>names/s</small></div>
+        </div>
+
+        <div class="stat-box">
+          <span class="stat-label">Verified Names</span>
+          <div class="stat-val" id="live-tested">0</div>
+        </div>
+
+        <div class="stat-box" style="flex: 2;">
+          <span class="stat-label">Currently Testing Batch</span>
+          <div class="stat-val batch-val" id="live-batch">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Discovered Claimable Names (Live Feed) -->
+    <section class="card live-hits-card">
+      <div class="section-title-row">
+        <div>
+          <h2>🎉 Claimable Available Usernames (100% Verified)</h2>
+          <p>These usernames were authenticated through your active Twitch session and are ready to claim</p>
+        </div>
+        <button id="btn-clear-hits" class="btn-secondary btn-sm">Clear Feed</button>
+      </div>
+
+      <div id="live-hits-grid" class="hits-grid">
+        <div class="empty-hits" id="empty-hits-msg">
+          <span>⚡ Start the Turbo Scan above. Available names will appear here immediately!</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Instant Single Username Lookup -->
+    <section class="card single-lookup-card">
+      <div class="section-title-row">
+        <div>
+          <h2>Quick Single Name Lookup</h2>
+          <p>Test any specific handle instantly</p>
+        </div>
+      </div>
+
+      <form id="quick-check-form" class="quick-check-form">
+        <input type="text" id="quick-input" placeholder="Type a name to check (e.g. z8x3, cool, ninja)..." maxlength="25">
+        <button type="submit" class="btn-primary" id="btn-quick-submit">Check</button>
+      </form>
+
+      <div id="quick-result" class="quick-result-display hidden">
+        <div class="quick-result-header">
+          <strong id="qr-name" style="font-family: var(--font-mono); font-size: 1.2rem;">name</strong>
+          <span id="qr-badge" class="table-badge available">AVAILABLE</span>
+        </div>
+        <p id="qr-desc" style="font-size: 0.88rem; color: var(--text-sub); margin-top: 6px;">Status details</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Twitch Short Username Sniper &bull; Connected to Twitch Settings</p>
+    </footer>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
