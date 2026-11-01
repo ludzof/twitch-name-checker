@@ -159,6 +159,12 @@ python cli.py export --status available --out available_names.txt
 
 ---
 
+## 🛠️ Credits & Development
+
+Developed by **[ludzof](https://github.com/ludzof)** with **Antigravity** (Google DeepMind).
+
+---
+
 ## 📄 License
 
 MIT License. See [LICENSE](LICENSE) for details.
