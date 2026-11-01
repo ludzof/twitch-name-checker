@@ -372,19 +372,19 @@
     let foundHits = [];
     startTime = Date.now();
 
-    const CONCURRENCY = Math.max(1, Math.min(30, parseInt(opts.concurrency) || 20));
+    const CONCURRENCY = Math.max(1, Math.min(60, parseInt(opts.concurrency) || 50));
     const BATCH_SIZE = Math.max(5, Math.min(35, parseInt(opts.batch_size) || 30));
 
-    updatePill(`🚀 HyperTurbo (${candidates.length.toLocaleString()} names · ${CONCURRENCY} workers · Batch ${BATCH_SIZE})...`, "#00f593");
+    updatePill(`⚡ Apex Turbo (${candidates.length.toLocaleString()} names · ${CONCURRENCY} workers · Batch ${BATCH_SIZE})...`, "#00f593");
 
     let cursor = 0;
     let rateLimitUntil = 0;
     let lastUiUpdate = 0;
 
     async function runWorker(workerId) {
-      // Light stagger on launch to smooth out network bursts
+      // Linear pipelining: stagger workers by 4ms to smooth network I/O
       if (workerId > 0) {
-        await new Promise(r => setTimeout(r, workerId * 8));
+        await new Promise(r => setTimeout(r, workerId * 4));
       }
 
       while (isScanning && cursor < candidates.length) {
