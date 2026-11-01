@@ -258,12 +258,18 @@ btnDashboardStart.addEventListener("click", async () => {
   const chkContinuous = document.getElementById("chk-continuous-scan");
   const isContinuous = chkContinuous ? chkContinuous.checked : true;
 
-  const speedPreset = document.getElementById("select-speed-preset")?.value || "hyperturbo";
-  let concurrency = 6;
+  const speedPreset = document.getElementById("select-speed-preset")?.value || "nuclear_20";
+  let concurrency = 20;
   let batchSize = 30;
-  if (speedPreset === "overdrive") {
-    concurrency = 8;
+  if (speedPreset === "nuclear_20") {
+    concurrency = 20;
+    batchSize = 30;
+  } else if (speedPreset === "overdrive_12") {
+    concurrency = 12;
     batchSize = 35;
+  } else if (speedPreset === "hyperturbo") {
+    concurrency = 6;
+    batchSize = 30;
   } else if (speedPreset === "turbo") {
     concurrency = 4;
     batchSize = 25;

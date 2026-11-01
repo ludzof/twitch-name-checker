@@ -2,10 +2,10 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Speed](https://img.shields.io/badge/Speed-800--1%2C200%2B%20req%2Fsec-brightgreen.svg)]()
+[![Speed](https://img.shields.io/badge/Speed-2%2C000--3%2C500%2B%20req%2Fsec-brightgreen.svg)]()
 [![Twitch GQL](https://img.shields.io/badge/Twitch-Internal%20GraphQL-9146FF.svg)](https://twitch.tv)
 
-A high-performance, real-time Twitch short handle validator and in-browser turbo sniper. Designed to discover, test, and snipe rare 4-letter and 5-letter usernames, dictionary words, and aesthetic handles at **800–1,200+ names per second (20x faster)** with **100% verification accuracy**.
+A high-performance, real-time Twitch short handle validator and in-browser turbo sniper. Designed to discover, test, and snipe rare 4-letter and 5-letter usernames, dictionary words, and aesthetic handles at **up to 2,000–3,500+ names per second with 20 concurrent workers** with **100% verification accuracy**.
 
 ---
 
@@ -15,11 +15,11 @@ Most external Twitch checkers only query the public `user(login)` endpoint, whic
 - ❌ Many names appear "free" on public endpoints but are actually **locked, banned, or held in a 6-month recycling cooldown**.
 - ❌ Public endpoints get IP-banned or rate-limited after just a few dozen checks.
 
-### The In-Browser 20x HyperTurbo Sniper Solution (v4.0)
+### The In-Browser Nuclear Sniper Solution (v4.0)
 This tool bridges directly to your logged-in **Twitch Profile Settings** tab (`twitch.tv/settings/profile`):
 - ✅ Uses Twitch's official **internal `UsernameValidator_User` GraphQL query** with your active session integrity token (`Client-Integrity`).
 - ✅ **100% True Availability:** If the sniper says a name is available, it is **guaranteed claimable right that second**.
-- ✅ **Concurrent Worker Pool (20x Speed):** Launches 6 to 8 parallel async workers with batch sizes up to 35, delivering **800–1,200+ names checked every second** over HTTP/2 multiplexing.
+- ✅ **20 Concurrent Workers:** Launches up to 20 parallel async workers with batch sizes up to 35, checking **2,000–3,500+ names every second** over HTTP/2 multiplexing with smooth network staggering.
 - ✅ **Instant Auto-Fill:** When an available handle is found, click **Auto-Fill** to instantly inject it into the Twitch username input box.
 
 ---

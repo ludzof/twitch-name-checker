@@ -372,7 +372,7 @@
     let foundHits = [];
     startTime = Date.now();
 
-    const CONCURRENCY = Math.max(1, Math.min(10, parseInt(opts.concurrency) || 6));
+    const CONCURRENCY = Math.max(1, Math.min(30, parseInt(opts.concurrency) || 20));
     const BATCH_SIZE = Math.max(5, Math.min(35, parseInt(opts.batch_size) || 30));
 
     updatePill(`🚀 HyperTurbo (${candidates.length.toLocaleString()} names · ${CONCURRENCY} workers · Batch ${BATCH_SIZE})...`, "#00f593");
@@ -382,6 +382,11 @@
     let lastUiUpdate = 0;
 
     async function runWorker(workerId) {
+      // Light stagger on launch to smooth out network bursts
+      if (workerId > 0) {
+        await new Promise(r => setTimeout(r, workerId * 8));
+      }
+
       while (isScanning && cursor < candidates.length) {
         // Handle global rate limit pause
         if (Date.now() < rateLimitUntil) {
