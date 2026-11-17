@@ -528,49 +528,55 @@ async def handle_get_candidates(request: web.Request) -> web.Response:
 
 async def handle_userscript(request: web.Request) -> web.Response:
     """Serve Tampermonkey 1-click installable Userscript (Live Auto-updating loader)."""
-    userscript_content = """// ==UserScript==
+    scheme = request.headers.get("X-Forwarded-Proto", request.scheme)
+    host = request.headers.get("X-Forwarded-Host", request.host)
+    base_url = f"{scheme}://{host}"
+    userscript_content = f"""// ==UserScript==
 // @name         Twitch Short Username Sniper Bridge
-// @namespace    http://localhost:5050/
-// @version      4.0
-// @description  Connects Twitch settings directly to your local Name Sniper Dashboard (20x HyperTurbo)
+// @namespace    {base_url}/
+// @version      4.2
+// @description  Connects Twitch settings directly to your Name Sniper Dashboard (Apex Turbo)
 // @match        https://www.twitch.tv/settings/profile*
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
 // @connect      localhost
+// @connect      *
 // @run-at       document-idle
 // ==/UserScript==
 
-(function () {
-  console.log("🚀 Twitch Sniper Bridge v4.0 HyperTurbo Loader initializing...");
-  function loadSniper() {
-    if (typeof GM_xmlhttpRequest !== "undefined") {
-      GM_xmlhttpRequest({
+(function () {{
+  window.__TWITCH_SNIPER_SERVER_URL__ = "{base_url}";
+  console.log("🚀 Twitch Sniper Bridge Apex Loader initializing with {base_url}...");
+  function loadSniper() {{
+    const sniperUrl = "{base_url}/static/browser_sniper.js?t=" + Date.now();
+    if (typeof GM_xmlhttpRequest !== "undefined") {{
+      GM_xmlhttpRequest({{
         method: "GET",
-        url: "http://127.0.0.1:5050/static/browser_sniper.js?t=" + Date.now(),
-        onload: function (res) {
-          try {
+        url: sniperUrl,
+        onload: function (res) {{
+          try {{
             new Function(res.responseText)();
-          } catch (e) {
+          }} catch (e) {{
             console.error("Sniper script execution error:", e);
-          }
-        },
-        onerror: function (err) {
+          }}
+        }},
+        onerror: function (err) {{
           console.warn("GM_xmlhttpRequest failed, falling back to fetch", err);
-          fetch("http://127.0.0.1:5050/static/browser_sniper.js?t=" + Date.now())
+          fetch(sniperUrl)
             .then(r => r.text())
             .then(code => new Function(code)())
             .catch(console.error);
-        }
-      });
-    } else {
-      fetch("http://127.0.0.1:5050/static/browser_sniper.js?t=" + Date.now())
+        }}
+      }});
+    }} else {{
+      fetch(sniperUrl)
         .then(r => r.text())
         .then(code => new Function(code)())
         .catch(console.error);
-    }
-  }
+    }}
+  }}
   loadSniper();
-})();
+}})();
 """
     return web.Response(
         text=userscript_content,
@@ -628,6 +634,7 @@ def create_app() -> web.Application:
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5050))
-    print(f"🚀 Starting Twitch Username Checker Dashboard at http://localhost:{port}")
+    host = os.environ.get("HOST", "0.0.0.0")
+    print(f"🚀 Starting Twitch Username Checker Dashboard at http://{host}:{port}")
     app = create_app()
-    web.run_app(app, host="127.0.0.1", port=port)
+    web.run_app(app, host=host, port=port)

@@ -183,7 +183,8 @@
 
   // Universal Bridge Request (Tampermonkey GM_xmlhttpRequest + normal Fetch fallback)
   function bridgeRequest(endpoint, body) {
-    const url = `http://127.0.0.1:5050${endpoint}`;
+    const serverBase = (typeof window !== "undefined" && window.__TWITCH_SNIPER_SERVER_URL__) ? window.__TWITCH_SNIPER_SERVER_URL__ : "http://127.0.0.1:5050";
+    const url = `${serverBase}${endpoint}`;
     return new Promise((resolve, reject) => {
       if (typeof GM_xmlhttpRequest !== "undefined") {
         GM_xmlhttpRequest({
